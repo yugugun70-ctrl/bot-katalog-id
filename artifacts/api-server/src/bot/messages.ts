@@ -1,5 +1,6 @@
 import { daftarKatalog, infoBank } from "./data";
 import { sisaDownloadGratis } from "./userTracker";
+import { ambilFileId } from "./adminStore";
 
 export function pesanWelcome(nama: string): string {
   return `👋 *Halo, ${nama}!*
@@ -10,7 +11,7 @@ Bot ini membantu anggota grup mendapatkan file APK TikTok Hongkong versi terbaru
 
 🔰 *Yang bisa kamu lakukan:*
 • 📋 Lihat katalog jenis APK yang tersedia
-• ⬇️ Minta file APK langsung dari admin
+• ⬇️ Download file APK langsung dari bot
 • 💛 Donasi sukarela untuk mendukung update
 
 Gunakan tombol di bawah atau ketik perintah:
@@ -23,28 +24,32 @@ export function pesanKatalog(userId: number): string {
     sisa >= 999
       ? "✅ *Donatur aktif* — Terima kasih banyak! 💛"
       : sisa > 0
-        ? `🎁 *Sisa permintaan gratis: ${sisa}x*`
-        : `⚠️ *Permintaan gratis habis* — Silakan donasi untuk melanjutkan`;
+        ? `🎁 *Sisa download gratis: ${sisa}x*`
+        : `⚠️ *Download gratis habis* — Silakan donasi untuk melanjutkan`;
+
+  const statusFile = (id: string) =>
+    ambilFileId(id) ? "✅" : "⏳";
 
   return `📋 *KATALOG APK TIKTOK HK*
 
 ${infoSisa}
 
-Pilih jenis APK yang ingin kamu minta:
+Pilih jenis APK yang ingin kamu download:
 
-⭐ *Platinum arm8* — Untuk HP modern (ARM64)
-⭐ *Platinum arm7* — Untuk HP lama (ARM32)
-🔒 *Private Plus arm8* — Untuk HP modern (ARM64)
-🔒 *Private Plus arm7* — Untuk HP lama (ARM32)
-🔌 *Plugin* — File plugin tambahan
-🏛️ *Central* — Versi Central TikTok HK
-💛 *Donasi* — Dukung layanan ini
+${statusFile("platinum_arm8")} ⭐ *Platinum arm8* — HP modern (ARM64)
+${statusFile("platinum_arm7")} ⭐ *Platinum arm7* — HP lama (ARM32)
+${statusFile("private_plus_arm8")} 🔒 *Private Plus arm8* — HP modern (ARM64)
+${statusFile("private_plus_arm7")} 🔒 *Private Plus arm7* — HP lama (ARM32)
+${statusFile("plugin")} 🔌 *Plugin* — File plugin tambahan
+${statusFile("central")} 🏛️ *Central* — Versi Central
+
+✅ = File tersedia  ⏳ = Segera hadir
 
 ---
 💡 *Tidak tahu ARM berapa HP kamu?*
-Cek di: Pengaturan → Tentang Ponsel → Prosesor
-• ARM64/aarch64 = pilih *arm8*
-• ARM32/armeabi = pilih *arm7*`;
+Pengaturan → Tentang Ponsel → Prosesor
+• ARM64 / aarch64 = pilih *arm8*
+• ARM32 / armeabi = pilih *arm7*`;
 }
 
 export function pesanInfo(): string {
@@ -57,18 +62,17 @@ export function pesanInfo(): string {
 🔌 *Plugin* — File plugin pendukung
 🏛️ *Central* — Versi central standar
 
-🔄 File diupdate secara berkala, versi lama dihapus saat ada yang baru.
-
+🔄 File diupdate secara berkala, versi lama diganti saat ada yang baru.
 ✅ *Semua file sudah diuji dan aman.*
 
 ---
 💡 *Cara install APK:*
-1. Download file APK yang dikirim admin
+1. Download file APK dari bot
 2. Pengaturan → Keamanan → Izinkan sumber tidak dikenal
 3. Buka file APK dan install
 4. Selesai! Buka TikTok HK
 
-*Untuk minta file:* ketik /katalog`;
+*Untuk download:* ketik /katalog`;
 }
 
 export function pesanDonasi(): string {
@@ -88,7 +92,7 @@ Klik tombol di bawah untuk lihat QR Code Alipay HK
 
 ---
 🎁 *Keuntungan Donatur:*
-• Minta APK tanpa batas (tidak ada limit 3x)
+• Download tanpa batas (tidak ada limit 3x)
 • Prioritas saat versi baru rilis
 
 Setelah donasi, klik *"Saya Sudah Donasi"* di bawah.
@@ -102,68 +106,99 @@ export function pesanBantuan(): string {
 
 *Daftar perintah:*
 /start — Tampilkan menu utama
-/katalog — Pilih & minta jenis APK TikTok HK
+/katalog — Pilih & download APK TikTok HK
 /info — Penjelasan tiap jenis APK
 /donasi — Info donasi & rekening
 /qralipay — Tampilkan QR Code Alipay HK
 /bantuan — Panduan ini
 
 ---
-*Sistem permintaan file:*
-🎁 Gratis *3x permintaan* untuk semua anggota
-💛 Donasi sukarela = permintaan tanpa batas
+*Sistem download:*
+🎁 Gratis *3x download* untuk semua anggota
+💛 Donasi sukarela = download tanpa batas
 ✅ Donatur mendapat akses prioritas
 
 *Ada masalah?* Hubungi admin grup secara langsung.`;
 }
 
-export function pesanMintaFile(
+export function pesanAdminPanduan(): string {
+  const daftar = daftarKatalog
+    .map((v) => `• \`${v.id}\` → ${v.nama}`)
+    .join("\n");
+
+  return `🔧 *PANEL ADMIN*
+
+Halo Admin! Cara upload file APK:
+
+*Kirim file APK ke bot ini dengan caption salah satu ID berikut:*
+
+${daftar}
+
+*Contoh:*
+Kirim file APK → caption: \`platinum_arm8\`
+
+Bot akan otomatis menyimpan dan mengirimkan file tersebut ke pengguna yang meminta.
+
+*Perintah admin lain:*
+/status — Cek file yang sudah terupload
+/hapus [id] — Hapus file dari katalog`;
+}
+
+export function pesanStatusAdmin(): string {
+  const baris = daftarKatalog.map((v) => {
+    const ada = ambilFileId(v.id);
+    return `${ada ? "✅" : "❌"} ${v.nama} (\`${v.id}\`)`;
+  });
+  return `📊 *STATUS FILE KATALOG*\n\n${baris.join("\n")}`;
+}
+
+export function pesanDownloadBerhasil(
   userId: number,
   nama: string,
-  jenisApk: string,
+  namaApk: string,
 ): string {
   const sisa = sisaDownloadGratis(userId);
+  const sisaText = sisa >= 999 ? "∞ (Donatur)" : `${sisa}x`;
+  return `✅ *File dikirim, ${nama}!*
 
-  if (sisa <= 0) {
-    return `⚠️ *Permintaan gratis kamu sudah habis (3/3), ${nama}*
+📦 *${namaApk}* sedang dikirim ke chat ini.
+
+🔢 Sisa download gratis: *${sisaText}*
+
+💡 *Cara install:*
+1. Klik file untuk download
+2. Izinkan install dari sumber tidak dikenal
+3. Install & nikmati TikTok HK terbaru!
+
+🙏 Jika terbantu, pertimbangkan donasi → /donasi`;
+}
+
+export function pesanFileBelumAda(namaApk: string): string {
+  return `⏳ *File ${namaApk} belum tersedia*
+
+Admin belum mengupload file ini. Silakan coba lagi nanti atau hubungi admin grup.
+
+Cek ketersediaan file lain di /katalog`;
+}
+
+export function pesanDownloadGratisHabis(nama: string): string {
+  return `⚠️ *Download gratis kamu sudah habis (3/3), ${nama}*
 
 Untuk terus mendapatkan file APK TikTok terbaru, silakan lakukan donasi sukarela.
 
 Ketik /donasi untuk melihat cara donasi. 💛
 
 _Terima kasih sudah memahami! Donasi membantu admin terus update untuk komunitas._`;
-  }
-
-  const item = daftarKatalog.find((v) => v.id === jenisApk);
-  const namaApk = item ? item.nama : jenisApk;
-  const sisaSetelah = sisa >= 999 ? "∞ (Donatur)" : `${sisa - 1}x`;
-
-  return `✅ *Permintaan diterima, ${nama}!*
-
-📦 Jenis APK: *${namaApk}*
-
-📩 Admin akan segera mengirimkan file ke chat ini.
-⏳ *Mohon tunggu sebentar ya.*
-
----
-🔢 Sisa permintaan gratis kamu: *${sisaSetelah}*
-
-💡 Setelah file diterima:
-1. Klik file untuk download
-2. Izinkan install dari sumber tidak dikenal
-3. Install & nikmati TikTok HK terbaru!
-
-🙏 Jika terbantu, pertimbangkan donasi sukarela → /donasi`;
 }
 
 export function pesanKonfirmasiDonasi(nama: string): string {
   return `✅ *Terima kasih, ${nama}!* 🙏
 
 Kami mencatat konfirmasi donasi kamu.
-Kamu sekarang mendapat akses *permintaan tanpa batas*! 🎉
+Kamu sekarang mendapat akses *download tanpa batas*! 🎉
 
-💛 Dukungan kamu sangat berarti untuk kelangsungan layanan update TikTok HK ini.
+💛 Dukungan kamu sangat berarti untuk kelangsungan layanan ini.
 Semoga berkah selalu! 🌟
 
-Ketik /katalog kapan saja untuk meminta file APK terbaru.`;
+Ketik /katalog kapan saja untuk download APK terbaru.`;
 }

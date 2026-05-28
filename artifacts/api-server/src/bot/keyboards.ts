@@ -10,15 +10,21 @@ export const menuUtama = Markup.inlineKeyboard([
 ]);
 
 export const menuKatalog = Markup.inlineKeyboard([
+  [Markup.button.callback("💛 Donasi", "donasi")],
   [Markup.button.callback("⭐ Platinum arm8", "minta_platinum_arm8")],
   [Markup.button.callback("⭐ Platinum arm7", "minta_platinum_arm7")],
   [Markup.button.callback("🔒 Private Plus arm8", "minta_private_plus_arm8")],
   [Markup.button.callback("🔒 Private Plus arm7", "minta_private_plus_arm7")],
   [Markup.button.callback("🔌 Plugin", "minta_plugin")],
   [Markup.button.callback("🏛️ Central", "minta_central")],
-  [Markup.button.callback("💛 Donasi", "donasi")],
   [Markup.button.callback("🏠 Menu Utama", "menu_utama")],
 ]);
+
+export const menuAdminUpload = (katalogId: string) =>
+  Markup.inlineKeyboard([
+    [Markup.button.callback(`✅ Ya, simpan sebagai ${katalogId}`, `konfirm_upload_${katalogId}`)],
+    [Markup.button.callback("❌ Batal", "menu_utama")],
+  ]);
 
 export const menuDonasi = Markup.inlineKeyboard([
   [Markup.button.callback("🔴 Lihat QR Alipay HK", "qralipay")],
