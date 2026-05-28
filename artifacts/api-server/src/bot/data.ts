@@ -1,19 +1,45 @@
 export interface TiktokVersion {
-  versi: string;
-  ukuran: string;
-  tanggal: string;
+  id: string;
+  nama: string;
   deskripsi: string;
-  linkDownload: string;
   tersedia: boolean;
 }
 
-export const daftarVersi: TiktokVersion[] = [
+export const daftarKatalog: TiktokVersion[] = [
   {
-    versi: "TikTok Versi Terbaru",
-    ukuran: "± 80-90 MB",
-    tanggal: "Selalu diperbarui",
-    deskripsi: "Versi paling terbaru yang sudah diuji dan aman untuk TikTok HK. Admin akan upload file APK terbaru secara berkala.",
-    linkDownload: "DIKIRIM_LANGSUNG",
+    id: "platinum_arm8",
+    nama: "Platinum arm8",
+    deskripsi: "Versi Platinum untuk perangkat ARM64 (HP modern, lebih cepat)",
+    tersedia: true,
+  },
+  {
+    id: "platinum_arm7",
+    nama: "Platinum arm7",
+    deskripsi: "Versi Platinum untuk perangkat ARM32 (HP lama/entry level)",
+    tersedia: true,
+  },
+  {
+    id: "private_plus_arm8",
+    nama: "Private Plus arm8",
+    deskripsi: "Versi Private Plus untuk perangkat ARM64 (HP modern, lebih cepat)",
+    tersedia: true,
+  },
+  {
+    id: "private_plus_arm7",
+    nama: "Private Plus arm7",
+    deskripsi: "Versi Private Plus untuk perangkat ARM32 (HP lama/entry level)",
+    tersedia: true,
+  },
+  {
+    id: "plugin",
+    nama: "Plugin",
+    deskripsi: "File plugin tambahan untuk TikTok HK",
+    tersedia: true,
+  },
+  {
+    id: "central",
+    nama: "Central",
+    deskripsi: "Versi Central TikTok HK",
     tersedia: true,
   },
 ];

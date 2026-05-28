@@ -1,6 +1,7 @@
 import path from "path";
 import { Telegraf, Context } from "telegraf";
 import { logger } from "../lib/logger";
+import { daftarKatalog } from "./data";
 import {
   menuUtama,
   menuKatalog,
@@ -31,7 +32,6 @@ if (!token) {
 }
 
 const bot = new Telegraf(token);
-
 const QRALIPAY_PATH = path.join(process.cwd(), "assets", "qralipay.jpg");
 
 function getNamaUser(ctx: Context): string {
@@ -69,6 +69,35 @@ async function kirimQRAlipay(ctx: Context): Promise<void> {
   }
 }
 
+function prosesPermintaan(ctx: Context, jenisApk: string) {
+  initUser(ctx);
+  const userId = getUserId(ctx);
+  const nama = getNamaUser(ctx);
+  const boleh = cekBolehDownload(userId);
+  if (boleh) tambahDownload(userId);
+  const menu = boleh ? menuSetelahMinta : menuHabis;
+  return ctx.reply(pesanMintaFile(userId, nama, jenisApk), {
+    parse_mode: "Markdown",
+    ...menu,
+  });
+}
+
+async function prosesPermintaanAction(ctx: Context, jenisApk: string) {
+  initUser(ctx);
+  const userId = getUserId(ctx);
+  const nama = getNamaUser(ctx);
+  const boleh = cekBolehDownload(userId);
+  if (boleh) tambahDownload(userId);
+  const menu = boleh ? menuSetelahMinta : menuHabis;
+  await ctx.answerCbQuery(
+    boleh ? "✅ Permintaan dikirim!" : "⚠️ Permintaan gratis habis",
+  );
+  return ctx.editMessageText(pesanMintaFile(userId, nama, jenisApk), {
+    parse_mode: "Markdown",
+    ...menu,
+  });
+}
+
 bot.start((ctx) => {
   initUser(ctx);
   const nama = getNamaUser(ctx);
@@ -84,19 +113,6 @@ bot.command("katalog", (ctx) => {
   return ctx.reply(pesanKatalog(userId), {
     parse_mode: "Markdown",
     ...menuKatalog,
-  });
-});
-
-bot.command("minta", (ctx) => {
-  initUser(ctx);
-  const userId = getUserId(ctx);
-  const nama = getNamaUser(ctx);
-  const boleh = cekBolehDownload(userId);
-  if (boleh) tambahDownload(userId);
-  const menu = boleh ? menuSetelahMinta : menuHabis;
-  return ctx.reply(pesanMintaFile(userId, nama), {
-    parse_mode: "Markdown",
-    ...menu,
   });
 });
 
@@ -129,6 +145,11 @@ bot.command("bantuan", (ctx) => {
   });
 });
 
+for (const item of daftarKatalog) {
+  bot.command(`minta_${item.id}`, (ctx) => prosesPermintaan(ctx, item.id));
+  bot.action(`minta_${item.id}`, (ctx) => prosesPermintaanAction(ctx, item.id));
+}
+
 bot.action("menu_utama", async (ctx) => {
   initUser(ctx);
   const nama = getNamaUser(ctx);
@@ -146,20 +167,6 @@ bot.action("katalog", async (ctx) => {
   return ctx.editMessageText(pesanKatalog(userId), {
     parse_mode: "Markdown",
     ...menuKatalog,
-  });
-});
-
-bot.action("minta", async (ctx) => {
-  initUser(ctx);
-  const userId = getUserId(ctx);
-  const nama = getNamaUser(ctx);
-  const boleh = cekBolehDownload(userId);
-  if (boleh) tambahDownload(userId);
-  const menu = boleh ? menuSetelahMinta : menuHabis;
-  await ctx.answerCbQuery(boleh ? "✅ Permintaan dikirim!" : "⚠️ Permintaan gratis habis");
-  return ctx.editMessageText(pesanMintaFile(userId, nama), {
-    parse_mode: "Markdown",
-    ...menu,
   });
 });
 

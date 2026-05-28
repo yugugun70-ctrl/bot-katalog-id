@@ -1,4 +1,4 @@
-import { infoBank } from "./data";
+import { daftarKatalog, infoBank } from "./data";
 import { sisaDownloadGratis } from "./userTracker";
 
 export function pesanWelcome(nama: string): string {
@@ -9,12 +9,12 @@ Selamat datang di *Bot Update TikTok HK* 🇭🇰
 Bot ini membantu anggota grup mendapatkan file APK TikTok Hongkong versi terbaru dengan mudah.
 
 🔰 *Yang bisa kamu lakukan:*
-• 📋 Lihat info versi APK terkini
+• 📋 Lihat katalog jenis APK yang tersedia
 • ⬇️ Minta file APK langsung dari admin
 • 💛 Donasi sukarela untuk mendukung update
 
 Gunakan tombol di bawah atau ketik perintah:
-/katalog · /minta · /info · /donasi · /bantuan`;
+/katalog · /info · /donasi · /bantuan`;
 }
 
 export function pesanKatalog(userId: number): string {
@@ -26,46 +26,49 @@ export function pesanKatalog(userId: number): string {
         ? `🎁 *Sisa permintaan gratis: ${sisa}x*`
         : `⚠️ *Permintaan gratis habis* — Silakan donasi untuk melanjutkan`;
 
-  return `📋 *INFO APK TIKTOK HONGKONG*
+  return `📋 *KATALOG APK TIKTOK HK*
 
 ${infoSisa}
 
-📱 *TikTok HK — Versi Terbaru*
-📦 Ukuran: ± 80–90 MB
-🔄 Diperbarui secara berkala oleh admin
+Pilih jenis APK yang ingin kamu minta:
 
-📝 *Tentang file ini:*
-File APK TikTok khusus versi Hongkong yang sudah diuji dan aman digunakan. Admin selalu mengupdate ke versi paling baru dan menghapus yang lama.
-
-⬇️ Klik tombol *"Minta File APK"* untuk meminta admin mengirimkan file ke kamu.
+⭐ *Platinum arm8* — Untuk HP modern (ARM64)
+⭐ *Platinum arm7* — Untuk HP lama (ARM32)
+🔒 *Private Plus arm8* — Untuk HP modern (ARM64)
+🔒 *Private Plus arm7* — Untuk HP lama (ARM32)
+🔌 *Plugin* — File plugin tambahan
+🏛️ *Central* — Versi Central TikTok HK
+💛 *Donasi* — Dukung layanan ini
 
 ---
-💡 *Cara install setelah dapat file:*
-1. Buka file APK yang dikirim bot
-2. Pengaturan → Keamanan → Izinkan sumber tidak dikenal
-3. Install & buka TikTok HK seperti biasa`;
+💡 *Tidak tahu ARM berapa HP kamu?*
+Cek di: Pengaturan → Tentang Ponsel → Prosesor
+• ARM64/aarch64 = pilih *arm8*
+• ARM32/armeabi = pilih *arm7*`;
 }
 
 export function pesanInfo(): string {
-  return `ℹ️ *INFO VERSI TERBARU*
+  return `ℹ️ *INFO LAYANAN UPDATE TIKTOK HK*
 
-📱 *TikTok HK — Selalu Versi Terbaru*
-🔄 Admin memperbarui file setiap ada versi baru dari TikTok HK
-🗑️ Versi lama dihapus otomatis setelah ada yang baru
+📱 Admin selalu menyediakan versi APK terbaru:
 
-✅ *Jaminan keamanan:*
-• Setiap file diuji terlebih dahulu sebelum dibagikan
-• Khusus untuk pengguna TikTok Hongkong
-• Tidak ada modifikasi — file asli dari TikTok HK
+⭐ *Platinum* — Versi premium dengan fitur lengkap
+🔒 *Private Plus* — Versi privat dengan fitur eksklusif
+🔌 *Plugin* — File plugin pendukung
+🏛️ *Central* — Versi central standar
 
-📩 *Cara dapatkan file:*
-Ketik /minta dan admin akan mengirimkan APK terbaru langsung ke chat ini.
+🔄 File diupdate secara berkala, versi lama dihapus saat ada yang baru.
 
-💡 *Cara install:*
-1. Download file APK yang dikirim
-2. Pengaturan → Keamanan → Izinkan dari sumber tidak dikenal
+✅ *Semua file sudah diuji dan aman.*
+
+---
+💡 *Cara install APK:*
+1. Download file APK yang dikirim admin
+2. Pengaturan → Keamanan → Izinkan sumber tidak dikenal
 3. Buka file APK dan install
-4. Selesai! Buka TikTok HK seperti biasa`;
+4. Selesai! Buka TikTok HK
+
+*Untuk minta file:* ketik /katalog`;
 }
 
 export function pesanDonasi(): string {
@@ -81,7 +84,7 @@ File APK cukup besar & butuh waktu untuk cari, uji, dan upload setiap versi baru
 *0856-4145-2357*
 
 🔴 *Alipay HK:*
-Ketik /qralipay untuk melihat QR Code Alipay HK
+Klik tombol di bawah untuk lihat QR Code Alipay HK
 
 ---
 🎁 *Keuntungan Donatur:*
@@ -99,9 +102,8 @@ export function pesanBantuan(): string {
 
 *Daftar perintah:*
 /start — Tampilkan menu utama
-/katalog — Info APK TikTok HK terbaru
-/minta — Minta file APK ke admin
-/info — Detail versi & cara install
+/katalog — Pilih & minta jenis APK TikTok HK
+/info — Penjelasan tiap jenis APK
 /donasi — Info donasi & rekening
 /qralipay — Tampilkan QR Code Alipay HK
 /bantuan — Panduan ini
@@ -115,7 +117,11 @@ export function pesanBantuan(): string {
 *Ada masalah?* Hubungi admin grup secara langsung.`;
 }
 
-export function pesanMintaFile(userId: number, nama: string): string {
+export function pesanMintaFile(
+  userId: number,
+  nama: string,
+  jenisApk: string,
+): string {
   const sisa = sisaDownloadGratis(userId);
 
   if (sisa <= 0) {
@@ -128,18 +134,16 @@ Ketik /donasi untuk melihat cara donasi. 💛
 _Terima kasih sudah memahami! Donasi membantu admin terus update untuk komunitas._`;
   }
 
+  const item = daftarKatalog.find((v) => v.id === jenisApk);
+  const namaApk = item ? item.nama : jenisApk;
   const sisaSetelah = sisa >= 999 ? "∞ (Donatur)" : `${sisa - 1}x`;
 
   return `✅ *Permintaan diterima, ${nama}!*
 
-📩 Admin akan segera mengirimkan file APK TikTok HK versi terbaru ke chat ini.
+📦 Jenis APK: *${namaApk}*
 
-⏳ *Mohon tunggu sebentar* — admin akan memproses permintaan kamu.
-
----
-📦 Yang akan kamu terima:
-• File APK TikTok HK versi terbaru
-• Ukuran: ± 80–90 MB
+📩 Admin akan segera mengirimkan file ke chat ini.
+⏳ *Mohon tunggu sebentar ya.*
 
 ---
 🔢 Sisa permintaan gratis kamu: *${sisaSetelah}*
@@ -161,5 +165,5 @@ Kamu sekarang mendapat akses *permintaan tanpa batas*! 🎉
 💛 Dukungan kamu sangat berarti untuk kelangsungan layanan update TikTok HK ini.
 Semoga berkah selalu! 🌟
 
-Ketik /minta kapan saja untuk mendapatkan file APK terbaru.`;
+Ketik /katalog kapan saja untuk meminta file APK terbaru.`;
 }
