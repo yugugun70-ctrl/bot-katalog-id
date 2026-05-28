@@ -16,6 +16,14 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught exception — bot tetap berjalan");
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error({ reason }, "Unhandled rejection — bot tetap berjalan");
+});
+
 app.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
@@ -23,6 +31,24 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  startBot();
+  startKeepAlive(port);
 });
 
-startBot();
+function startKeepAlive(port: number): void {
+  const interval = 4 * 60 * 1000;
+
+  setInterval(async () => {
+    try {
+      const res = await fetch(`http://localhost:${port}/api/healthz`);
+      if (res.ok) {
+        logger.debug("Keep-alive ping OK");
+      }
+    } catch (err) {
+      logger.warn({ err }, "Keep-alive ping gagal");
+    }
+  }, interval);
+
+  logger.info("Keep-alive aktif (ping setiap 4 menit)");
+}
