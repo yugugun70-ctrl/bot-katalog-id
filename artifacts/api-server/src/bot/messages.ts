@@ -141,6 +141,7 @@ Bot akan otomatis menyimpan dan mengirimkan file tersebut ke pengguna yang memin
 
 *Perintah admin lain:*
 /status — Cek file yang sudah terupload
+/statistik — Lihat pengguna yang habis jatah tapi belum donasi
 /hapus [id] — Hapus file dari katalog`;
 }
 
@@ -150,6 +151,35 @@ export function pesanStatusAdmin(): string {
     return `${ada ? "✅" : "❌"} ${v.nama} (\`${v.id}\`)`;
   });
   return `📊 *STATUS FILE KATALOG*\n\n${baris.join("\n")}`;
+}
+
+export function pesanStatistik(
+  totalPengguna: number,
+  totalDonatur: number,
+  penggunaHabis: Array<{ namaUser: string; jumlahDownload: number; terakhirDownload?: string }>,
+): string {
+  const habisText =
+    penggunaHabis.length === 0
+      ? "_Tidak ada pengguna yang habis jatah_"
+      : penggunaHabis
+          .map((u, i) => {
+            const tgl = u.terakhirDownload
+              ? new Date(u.terakhirDownload).toLocaleDateString("id-ID")
+              : "-";
+            return `${i + 1}. *${u.namaUser}* — ${u.jumlahDownload}x download (terakhir: ${tgl})`;
+          })
+          .join("\n");
+
+  return `📈 *STATISTIK BOT*
+
+👥 Total pengguna: *${totalPengguna}*
+💛 Donatur: *${totalDonatur}*
+⚠️ Habis jatah (belum donasi): *${penggunaHabis.length}*
+
+---
+⚠️ *Pengguna habis jatah & belum donasi:*
+
+${habisText}`;
 }
 
 export function pesanDownloadBerhasil(

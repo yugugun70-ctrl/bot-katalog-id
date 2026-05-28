@@ -19,6 +19,7 @@ import {
   pesanBantuan,
   pesanAdminPanduan,
   pesanStatusAdmin,
+  pesanStatistik,
   pesanDownloadBerhasil,
   pesanFileBelumAda,
   pesanDownloadGratisHabis,
@@ -29,6 +30,9 @@ import {
   tambahDownload,
   tandaiSudahDonasi,
   cekBolehDownload,
+  getDaftarPenggunaHabis,
+  getTotalPengguna,
+  getTotalDonatur,
 } from "./userTracker";
 import {
   isAdmin,
@@ -160,6 +164,20 @@ function setupHandlers(b: Telegraf): void {
       initUser(ctx);
       if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
       return ctx.reply(pesanStatusAdmin(), { parse_mode: "Markdown" });
+    }),
+  );
+
+  b.command(
+    "statistik",
+    safeHandler(async (ctx) => {
+      initUser(ctx);
+      if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
+      const habis = getDaftarPenggunaHabis();
+      const total = getTotalPengguna();
+      const donatur = getTotalDonatur();
+      return ctx.reply(pesanStatistik(total, donatur, habis), {
+        parse_mode: "Markdown",
+      });
     }),
   );
 
