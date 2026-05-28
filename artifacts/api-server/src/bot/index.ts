@@ -1,3 +1,4 @@
+import path from "path";
 import { Telegraf, Context } from "telegraf";
 import { logger } from "../lib/logger";
 import {
@@ -31,7 +32,7 @@ if (!token) {
 
 const bot = new Telegraf(token);
 
-const QRALIPAY_PATH = process.env["QRALIPAY_PATH"] ?? "";
+const QRALIPAY_PATH = path.join(process.cwd(), "assets", "qralipay.jpg");
 
 function getNamaUser(ctx: Context): string {
   const user = ctx.from;
@@ -50,26 +51,22 @@ function initUser(ctx: Context): void {
 }
 
 async function kirimQRAlipay(ctx: Context): Promise<void> {
-  if (QRALIPAY_PATH) {
-    try {
-      await ctx.replyWithPhoto(
-        { source: QRALIPAY_PATH },
-        {
-          caption:
-            "🔴 *QR Code Alipay HK*\nScan QR di atas untuk donasi via Alipay HK 🙏",
-          parse_mode: "Markdown",
-          ...menuDonasi,
-        },
-      );
-      return;
-    } catch {
-      // fallthrough to text
-    }
+  try {
+    await ctx.replyWithPhoto(
+      { source: QRALIPAY_PATH },
+      {
+        caption:
+          "🔴 *QR Code Alipay HK*\n\nScan QR di atas untuk donasi via Alipay HK 🙏\n\n💚 *GoPay:* 0856-4145-2357",
+        parse_mode: "Markdown",
+        ...menuDonasi,
+      },
+    );
+  } catch {
+    await ctx.reply(
+      "🔴 *QR Code Alipay HK*\n\nSilakan hubungi admin untuk mendapatkan QR Code Alipay HK.\n\n💚 *GoPay:* 0856-4145-2357",
+      { parse_mode: "Markdown", ...menuDonasi },
+    );
   }
-  await ctx.reply(
-    "🔴 *QR Code Alipay HK*\n\nSilakan hubungi admin untuk mendapatkan QR Code Alipay HK.\n\n💚 *GoPay:* 0856-4145-2357",
-    { parse_mode: "Markdown", ...menuDonasi },
-  );
 }
 
 bot.start((ctx) => {
