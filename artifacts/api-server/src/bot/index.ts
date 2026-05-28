@@ -1,11 +1,12 @@
 import path from "path";
-import { Telegraf, Context } from "telegraf";
+import { Telegraf, Context, Markup } from "telegraf";
 import { message } from "telegraf/filters";
 import { logger } from "../lib/logger";
 import { daftarKatalog } from "./data";
 import {
   menuUtama,
   menuKatalog,
+  menuPilihKatalogLink,
   menuDonasi,
   menuKembali,
   menuSetelahMinta,
@@ -20,6 +21,7 @@ import {
   pesanAdminPanduan,
   pesanStatusAdmin,
   pesanStatistik,
+  pesanPilihKatalogLink,
   pesanDownloadBerhasil,
   pesanFileBelumAda,
   pesanDownloadGratisHabis,
@@ -37,7 +39,12 @@ import {
 import {
   isAdmin,
   simpanFileId,
-  ambilFileId,
+  simpanUrl,
+  hapusEntri,
+  ambilEntri,
+  simpanPendingUrl,
+  ambilPendingUrl,
+  hapusPendingUrl,
 } from "./adminStore";
 
 const token = process.env["TELEGRAM_BOT_TOKEN"];
@@ -47,6 +54,10 @@ if (!token) {
 
 let bot: Telegraf;
 const QRALIPAY_PATH = path.join(process.cwd(), "assets", "qralipay.jpg");
+
+function isUrl(text: string): boolean {
+  return /^https?:\/\/[^\s]+$/.test(text.trim());
+}
 
 function getNamaUser(ctx: Context): string {
   const user = ctx.from;
@@ -75,7 +86,7 @@ function safeHandler<T extends Context>(
       try {
         await ctx.reply("⚠️ Terjadi kesalahan. Silakan coba lagi.");
       } catch {
-        // ignore reply error
+        // ignore
       }
     }
   };
@@ -103,6 +114,8 @@ async function kirimQRAlipay(ctx: Context): Promise<void> {
 async function kirimFile(ctx: Context, jenisApk: string): Promise<void> {
   const userId = getUserId(ctx);
   const nama = getNamaUser(ctx);
+  const item = daftarKatalog.find((v) => v.id === jenisApk);
+  const namaApk = item?.nama ?? jenisApk;
 
   if (!cekBolehDownload(userId)) {
     await ctx.reply(pesanDownloadGratisHabis(nama), {
@@ -112,11 +125,8 @@ async function kirimFile(ctx: Context, jenisApk: string): Promise<void> {
     return;
   }
 
-  const fileId = ambilFileId(jenisApk);
-  const item = daftarKatalog.find((v) => v.id === jenisApk);
-  const namaApk = item?.nama ?? jenisApk;
-
-  if (!fileId) {
+  const entri = ambilEntri(jenisApk);
+  if (!entri || !entri.nilai) {
     await ctx.reply(pesanFileBelumAda(namaApk), {
       parse_mode: "Markdown",
       ...menuKembali,
@@ -126,10 +136,23 @@ async function kirimFile(ctx: Context, jenisApk: string): Promise<void> {
 
   tambahDownload(userId);
 
-  await ctx.replyWithDocument(fileId, {
-    caption: pesanDownloadBerhasil(userId, nama, namaApk),
-    parse_mode: "Markdown",
-  });
+  if (entri.tipe === "url") {
+    await ctx.reply(
+      pesanDownloadBerhasil(userId, nama, namaApk),
+      {
+        parse_mode: "Markdown",
+        ...Markup.inlineKeyboard([
+          [Markup.button.url(`⬇️ Download ${namaApk}`, entri.nilai)],
+          [Markup.button.callback("📋 Katalog APK", "katalog")],
+        ]),
+      },
+    );
+  } else {
+    await ctx.replyWithDocument(entri.nilai, {
+      caption: pesanDownloadBerhasil(userId, nama, namaApk),
+      parse_mode: "Markdown",
+    });
+  }
 }
 
 function setupHandlers(b: Telegraf): void {
@@ -149,256 +172,220 @@ function setupHandlers(b: Telegraf): void {
     }),
   );
 
-  b.command(
-    "admin",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
-      return ctx.reply(pesanAdminPanduan(), { parse_mode: "Markdown" });
-    }),
-  );
+  b.command("admin", safeHandler(async (ctx) => {
+    initUser(ctx);
+    if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
+    return ctx.reply(pesanAdminPanduan(), { parse_mode: "Markdown" });
+  }));
 
-  b.command(
-    "status",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
-      return ctx.reply(pesanStatusAdmin(), { parse_mode: "Markdown" });
-    }),
-  );
+  b.command("status", safeHandler(async (ctx) => {
+    initUser(ctx);
+    if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
+    return ctx.reply(pesanStatusAdmin(), { parse_mode: "Markdown" });
+  }));
 
-  b.command(
-    "statistik",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
-      const habis = getDaftarPenggunaHabis();
-      const total = getTotalPengguna();
-      const donatur = getTotalDonatur();
-      return ctx.reply(pesanStatistik(total, donatur, habis), {
-        parse_mode: "Markdown",
-      });
-    }),
-  );
+  b.command("statistik", safeHandler(async (ctx) => {
+    initUser(ctx);
+    if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
+    const habis = getDaftarPenggunaHabis();
+    const total = getTotalPengguna();
+    const donatur = getTotalDonatur();
+    return ctx.reply(pesanStatistik(total, donatur, habis), {
+      parse_mode: "Markdown",
+    });
+  }));
 
-  b.command(
-    "hapus",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
-      const args = ctx.message.text.split(" ");
-      const id = args[1];
-      if (!id) return ctx.reply("Gunakan: /hapus [id]");
-      const valid = daftarKatalog.find((v) => v.id === id);
-      if (!valid)
-        return ctx.reply(`❌ ID tidak dikenali: \`${id}\``, {
-          parse_mode: "Markdown",
-        });
-      simpanFileId(id, "");
-      return ctx.reply(`✅ File *${valid.nama}* dihapus.`, {
-        parse_mode: "Markdown",
-      });
-    }),
-  );
+  b.command("hapus", safeHandler(async (ctx) => {
+    initUser(ctx);
+    if (!isAdmin(getUserId(ctx))) return ctx.reply("⛔ Akses ditolak.");
+    const args = ctx.message.text.split(" ");
+    const id = args[1];
+    if (!id) return ctx.reply("Gunakan: /hapus [id]");
+    const valid = daftarKatalog.find((v) => v.id === id);
+    if (!valid)
+      return ctx.reply(`❌ ID tidak dikenali: \`${id}\``, { parse_mode: "Markdown" });
+    hapusEntri(id);
+    return ctx.reply(`✅ File *${valid.nama}* dihapus dari katalog.`, {
+      parse_mode: "Markdown",
+    });
+  }));
 
-  b.command(
-    "katalog",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      const userId = getUserId(ctx);
-      return ctx.reply(pesanKatalog(userId), {
-        parse_mode: "Markdown",
-        ...menuKatalog,
-      });
-    }),
-  );
+  b.command("katalog", safeHandler(async (ctx) => {
+    initUser(ctx);
+    const userId = getUserId(ctx);
+    return ctx.reply(pesanKatalog(userId), {
+      parse_mode: "Markdown",
+      ...menuKatalog,
+    });
+  }));
 
-  b.command(
-    "info",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      return ctx.reply(pesanInfo(), {
-        parse_mode: "Markdown",
-        ...menuKembali,
-      });
-    }),
-  );
+  b.command("info", safeHandler(async (ctx) => {
+    initUser(ctx);
+    return ctx.reply(pesanInfo(), { parse_mode: "Markdown", ...menuKembali });
+  }));
 
-  b.command(
-    "donasi",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      return ctx.reply(pesanDonasi(), {
-        parse_mode: "Markdown",
-        ...menuDonasi,
-      });
-    }),
-  );
+  b.command("donasi", safeHandler(async (ctx) => {
+    initUser(ctx);
+    return ctx.reply(pesanDonasi(), { parse_mode: "Markdown", ...menuDonasi });
+  }));
 
-  b.command(
-    "qralipay",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await kirimQRAlipay(ctx);
-    }),
-  );
+  b.command("qralipay", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await kirimQRAlipay(ctx);
+  }));
 
-  b.command(
-    "bantuan",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      return ctx.reply(pesanBantuan(), {
-        parse_mode: "Markdown",
-        ...menuKembali,
-      });
-    }),
-  );
+  b.command("bantuan", safeHandler(async (ctx) => {
+    initUser(ctx);
+    return ctx.reply(pesanBantuan(), { parse_mode: "Markdown", ...menuKembali });
+  }));
 
   for (const item of daftarKatalog) {
-    b.action(
-      `minta_${item.id}`,
-      safeHandler(async (ctx) => {
-        initUser(ctx);
-        await ctx.answerCbQuery();
-        await kirimFile(ctx, item.id);
-      }),
-    );
-  }
-
-  b.action(
-    "menu_utama",
-    safeHandler(async (ctx) => {
+    b.action(`minta_${item.id}`, safeHandler(async (ctx) => {
       initUser(ctx);
       await ctx.answerCbQuery();
-      return ctx.editMessageText(pesanWelcome(getNamaUser(ctx)), {
-        parse_mode: "Markdown",
-        ...menuUtama,
-      });
-    }),
-  );
+      await kirimFile(ctx, item.id);
+    }));
 
-  b.action(
-    "katalog",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await ctx.answerCbQuery();
-      return ctx.editMessageText(pesanKatalog(getUserId(ctx)), {
-        parse_mode: "Markdown",
-        ...menuKatalog,
-      });
-    }),
-  );
-
-  b.action(
-    "info",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await ctx.answerCbQuery();
-      return ctx.editMessageText(pesanInfo(), {
-        parse_mode: "Markdown",
-        ...menuKembali,
-      });
-    }),
-  );
-
-  b.action(
-    "donasi",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await ctx.answerCbQuery();
-      return ctx.editMessageText(pesanDonasi(), {
-        parse_mode: "Markdown",
-        ...menuDonasi,
-      });
-    }),
-  );
-
-  b.action(
-    "qralipay",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await ctx.answerCbQuery();
-      await kirimQRAlipay(ctx);
-    }),
-  );
-
-  b.action(
-    "konfirmasi_donasi",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
+    b.action(`assign_link_${item.id}`, safeHandler(async (ctx) => {
       const userId = getUserId(ctx);
-      const nama = getNamaUser(ctx);
-      await ctx.answerCbQuery("✅ Donasi dikonfirmasi! Terima kasih 💛");
-      tandaiSudahDonasi(userId);
-      return ctx.editMessageText(pesanKonfirmasiDonasi(nama), {
-        parse_mode: "Markdown",
-        ...menuKembali,
-      });
-    }),
-  );
-
-  b.action(
-    "bantuan",
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      await ctx.answerCbQuery();
-      return ctx.editMessageText(pesanBantuan(), {
-        parse_mode: "Markdown",
-        ...menuKembali,
-      });
-    }),
-  );
-
-  b.on(
-    message("document"),
-    safeHandler(async (ctx) => {
-      const userId = getUserId(ctx);
-      if (!isAdmin(userId)) {
-        return ctx.reply(
-          "Halo! Ketik /bantuan untuk melihat semua perintah.",
-          menuKembali,
-        );
+      if (!isAdmin(userId)) return ctx.answerCbQuery("⛔ Akses ditolak.");
+      const url = ambilPendingUrl(userId);
+      if (!url) {
+        await ctx.answerCbQuery("❌ Link sudah kadaluarsa, kirim ulang.");
+        return;
       }
-      const caption = ctx.message.caption?.trim().toLowerCase() ?? "";
-      const fileId = ctx.message.document.file_id;
-      const namaFile = ctx.message.document.file_name ?? "file";
-      const katalogItem = daftarKatalog.find(
-        (v) => v.id === caption || v.nama.toLowerCase() === caption,
-      );
-      if (!katalogItem) {
-        const daftarId = daftarKatalog
-          .map((v) => `• \`${v.id}\``)
-          .join("\n");
-        return ctx.reply(
-          `⚠️ Caption tidak dikenali: \`${caption || "(kosong)"}\`\n\nID yang valid:\n${daftarId}`,
-          { parse_mode: "Markdown" },
-        );
-      }
-      simpanFileId(katalogItem.id, fileId);
-      logger.info({ katalogId: katalogItem.id, namaFile }, "Admin upload APK");
-      return ctx.reply(
-        `✅ *${katalogItem.nama}* berhasil disimpan!\n\nAnggota sudah bisa download otomatis. Ketik /status untuk cek semua file.`,
+      simpanUrl(item.id, url);
+      hapusPendingUrl(userId);
+      await ctx.answerCbQuery(`✅ Disimpan ke ${item.nama}`);
+      return ctx.editMessageText(
+        `✅ *Link berhasil disimpan!*\n\n📦 Jenis: *${item.nama}*\n🔗 Link: \`${url}\`\n\nAnggota sudah bisa download via bot! /status`,
         { parse_mode: "Markdown" },
       );
-    }),
-  );
+    }));
+  }
 
-  b.on(
-    message("text"),
-    safeHandler(async (ctx) => {
-      initUser(ctx);
-      const nama = getNamaUser(ctx);
-      if (isAdmin(getUserId(ctx))) {
-        return ctx.reply(
-          "Halo Admin! Kirim file APK dengan caption ID katalog.\nKetik /admin untuk panduan.",
-        );
-      }
+  b.action("batal_link", safeHandler(async (ctx) => {
+    const userId = getUserId(ctx);
+    hapusPendingUrl(userId);
+    await ctx.answerCbQuery("Dibatalkan");
+    return ctx.editMessageText("❌ Dibatalkan. Link tidak disimpan.");
+  }));
+
+  b.action("menu_utama", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    return ctx.editMessageText(pesanWelcome(getNamaUser(ctx)), {
+      parse_mode: "Markdown",
+      ...menuUtama,
+    });
+  }));
+
+  b.action("katalog", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    return ctx.editMessageText(pesanKatalog(getUserId(ctx)), {
+      parse_mode: "Markdown",
+      ...menuKatalog,
+    });
+  }));
+
+  b.action("info", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    return ctx.editMessageText(pesanInfo(), {
+      parse_mode: "Markdown",
+      ...menuKembali,
+    });
+  }));
+
+  b.action("donasi", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    return ctx.editMessageText(pesanDonasi(), {
+      parse_mode: "Markdown",
+      ...menuDonasi,
+    });
+  }));
+
+  b.action("qralipay", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    await kirimQRAlipay(ctx);
+  }));
+
+  b.action("konfirmasi_donasi", safeHandler(async (ctx) => {
+    initUser(ctx);
+    const userId = getUserId(ctx);
+    const nama = getNamaUser(ctx);
+    await ctx.answerCbQuery("✅ Donasi dikonfirmasi! Terima kasih 💛");
+    tandaiSudahDonasi(userId);
+    return ctx.editMessageText(pesanKonfirmasiDonasi(nama), {
+      parse_mode: "Markdown",
+      ...menuKembali,
+    });
+  }));
+
+  b.action("bantuan", safeHandler(async (ctx) => {
+    initUser(ctx);
+    await ctx.answerCbQuery();
+    return ctx.editMessageText(pesanBantuan(), {
+      parse_mode: "Markdown",
+      ...menuKembali,
+    });
+  }));
+
+  b.on(message("document"), safeHandler(async (ctx) => {
+    const userId = getUserId(ctx);
+    if (!isAdmin(userId)) {
+      return ctx.reply("Halo! Ketik /bantuan untuk melihat semua perintah.", menuKembali);
+    }
+    const caption = ctx.message.caption?.trim().toLowerCase() ?? "";
+    const fileId = ctx.message.document.file_id;
+    const namaFile = ctx.message.document.file_name ?? "file";
+    const katalogItem = daftarKatalog.find(
+      (v) => v.id === caption || v.nama.toLowerCase() === caption,
+    );
+    if (!katalogItem) {
+      const daftarId = daftarKatalog.map((v) => `• \`${v.id}\``).join("\n");
       return ctx.reply(
-        `Halo ${nama}! Ketik /bantuan untuk melihat semua perintah 😊`,
-        menuKembali,
+        `⚠️ *Caption tidak dikenali:* \`${caption || "(kosong)"}\`\n\nTulis caption dengan salah satu ID ini:\n\n${daftarId}\n\nAtau kirim *link* (tanpa caption) — bot akan tanya sendiri jenisnya.`,
+        { parse_mode: "Markdown" },
       );
-    }),
-  );
+    }
+    simpanFileId(katalogItem.id, fileId);
+    logger.info({ katalogId: katalogItem.id, namaFile }, "Admin upload APK file");
+    return ctx.reply(
+      `✅ *${katalogItem.nama}* berhasil disimpan!\n\nAnggota sudah bisa download otomatis. Ketik /status untuk cek semua file.`,
+      { parse_mode: "Markdown" },
+    );
+  }));
+
+  b.on(message("text"), safeHandler(async (ctx) => {
+    initUser(ctx);
+    const userId = getUserId(ctx);
+    const teks = ctx.message.text.trim();
+
+    if (isAdmin(userId) && isUrl(teks)) {
+      simpanPendingUrl(userId, teks);
+      return ctx.reply(pesanPilihKatalogLink(teks), {
+        parse_mode: "Markdown",
+        ...menuPilihKatalogLink,
+      });
+    }
+
+    if (isAdmin(userId)) {
+      return ctx.reply(
+        "Halo Admin! Kirim file APK (dengan caption ID) atau kirim *link* langsung.\nKetik /admin untuk panduan.",
+        { parse_mode: "Markdown" },
+      );
+    }
+
+    const nama = getNamaUser(ctx);
+    return ctx.reply(
+      `Halo ${nama}! Ketik /bantuan untuk melihat semua perintah 😊`,
+      menuKembali,
+    );
+  }));
 
   b.catch((err, ctx) => {
     logger.error({ err, updateType: ctx.updateType }, "Bot global error");
@@ -419,7 +406,6 @@ function launchBot(): void {
 
 export function startBot(): void {
   launchBot();
-
   process.once("SIGINT", () => bot?.stop("SIGINT"));
   process.once("SIGTERM", () => bot?.stop("SIGTERM"));
 }

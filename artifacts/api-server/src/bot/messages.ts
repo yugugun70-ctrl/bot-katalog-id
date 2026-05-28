@@ -1,6 +1,6 @@
 import { daftarKatalog, infoBank } from "./data";
 import { sisaDownloadGratis } from "./userTracker";
-import { ambilFileId } from "./adminStore";
+import { cekTersedia, ambilEntri } from "./adminStore";
 
 export function pesanWelcome(nama: string): string {
   return `👋 *Halo, ${nama}!*
@@ -28,7 +28,7 @@ export function pesanKatalog(userId: number): string {
         : `⚠️ *Download gratis habis* — Silakan donasi untuk melanjutkan`;
 
   const statusFile = (id: string) =>
-    ambilFileId(id) ? "✅" : "⏳";
+    cekTersedia(id) ? "✅" : "⏳";
 
   return `📋 *KATALOG APK TIKTOK HK*
 
@@ -147,10 +147,17 @@ Bot akan otomatis menyimpan dan mengirimkan file tersebut ke pengguna yang memin
 
 export function pesanStatusAdmin(): string {
   const baris = daftarKatalog.map((v) => {
-    const ada = ambilFileId(v.id);
-    return `${ada ? "✅" : "❌"} ${v.nama} (\`${v.id}\`)`;
+    const entri = ambilEntri(v.id);
+    const icon = entri ? "✅" : "❌";
+    const tipe = entri ? (entri.tipe === "url" ? " (link)" : " (file)") : "";
+    return `${icon} ${v.nama}${tipe} (\`${v.id}\`)`;
   });
   return `📊 *STATUS FILE KATALOG*\n\n${baris.join("\n")}`;
+}
+
+export function pesanPilihKatalogLink(url: string): string {
+  const singkat = url.length > 50 ? url.slice(0, 47) + "..." : url;
+  return `🔗 *Link diterima:*\n\`${singkat}\`\n\nLink ini untuk APK jenis apa?\nPilih salah satu di bawah:`;
 }
 
 export function pesanStatistik(

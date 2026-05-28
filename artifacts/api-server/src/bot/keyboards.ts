@@ -1,4 +1,5 @@
 import { Markup } from "telegraf";
+import { daftarKatalog } from "./data";
 
 export const menuUtama = Markup.inlineKeyboard([
   [
@@ -20,11 +21,12 @@ export const menuKatalog = Markup.inlineKeyboard([
   [Markup.button.callback("🏠 Menu Utama", "menu_utama")],
 ]);
 
-export const menuAdminUpload = (katalogId: string) =>
-  Markup.inlineKeyboard([
-    [Markup.button.callback(`✅ Ya, simpan sebagai ${katalogId}`, `konfirm_upload_${katalogId}`)],
-    [Markup.button.callback("❌ Batal", "menu_utama")],
-  ]);
+export const menuPilihKatalogLink = Markup.inlineKeyboard([
+  ...daftarKatalog.map((v) => [
+    Markup.button.callback(v.nama, `assign_link_${v.id}`),
+  ]),
+  [Markup.button.callback("❌ Batal", "batal_link")],
+]);
 
 export const menuDonasi = Markup.inlineKeyboard([
   [Markup.button.callback("🔴 Lihat QR Alipay HK", "qralipay")],
