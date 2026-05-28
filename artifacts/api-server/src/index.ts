@@ -32,8 +32,16 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  startBot();
-  startKeepAlive(port);
+  const isProduction = process.env["REPLIT_DEPLOYMENT"] === "1";
+  const devBotEnabled = process.env["BOT_DEV_MODE"] === "true";
+
+  if (isProduction || devBotEnabled) {
+    startBot();
+    startKeepAlive(port);
+    logger.info({ isProduction }, "Bot started");
+  } else {
+    logger.info("Bot tidak dijalankan di development — set BOT_DEV_MODE=true untuk aktifkan lokal");
+  }
 });
 
 function startKeepAlive(port: number): void {
