@@ -1,61 +1,69 @@
-import { daftarVersi, infoBank } from "./data";
+import { infoBank } from "./data";
 import { sisaDownloadGratis } from "./userTracker";
 
 export function pesanWelcome(nama: string): string {
   return `👋 *Halo, ${nama}!*
 
-Selamat datang di *TikTok HK Update Bot* 🇭🇰
+Selamat datang di *Bot Update TikTok HK* 🇭🇰
 
-Bot ini menyediakan file APK TikTok versi terbaru khusus untuk pengguna *TikTok Hongkong*.
+Bot ini membantu anggota grup mendapatkan file APK TikTok Hongkong versi terbaru dengan mudah.
 
-🔰 *Apa yang bisa kamu lakukan di sini?*
-• 📋 Lihat katalog versi APK yang tersedia
-• ⬇️ Download APK langsung via Telegram
-• ℹ️ Cek info & perubahan versi terbaru
+🔰 *Yang bisa kamu lakukan:*
+• 📋 Lihat info versi APK terkini
+• ⬇️ Minta file APK langsung dari admin
 • 💛 Donasi sukarela untuk mendukung update
 
 Gunakan tombol di bawah atau ketik perintah:
-/katalog · /download · /info · /donasi · /bantuan`;
+/katalog · /minta · /info · /donasi · /bantuan`;
 }
 
 export function pesanKatalog(userId: number): string {
   const sisa = sisaDownloadGratis(userId);
   const infoSisa =
     sisa >= 999
-      ? "✅ *Akses penuh* — Terima kasih atas donasinya! 💛"
+      ? "✅ *Donatur aktif* — Terima kasih banyak! 💛"
       : sisa > 0
-        ? `🎁 *Sisa download gratis: ${sisa}x*`
-        : `⚠️ *Download gratis habis* — Silakan donasi untuk melanjutkan`;
+        ? `🎁 *Sisa permintaan gratis: ${sisa}x*`
+        : `⚠️ *Permintaan gratis habis* — Silakan donasi untuk melanjutkan`;
 
-  let teks = `📋 *KATALOG APK TIKTOK HONGKONG*\n\n${infoSisa}\n\n`;
+  return `📋 *INFO APK TIKTOK HONGKONG*
 
-  daftarVersi.forEach((v, i) => {
-    const badge = i === 0 ? "🆕 " : "";
-    teks += `${badge}*${v.versi}*\n`;
-    teks += `📦 Ukuran: ${v.ukuran}  |  📅 ${v.tanggal}\n`;
-    teks += `📝 ${v.deskripsi}\n\n`;
-  });
+${infoSisa}
 
-  teks += `_Pilih aksi di bawah:_`;
-  return teks;
+📱 *TikTok HK — Versi Terbaru*
+📦 Ukuran: ± 80–90 MB
+🔄 Diperbarui secara berkala oleh admin
+
+📝 *Tentang file ini:*
+File APK TikTok khusus versi Hongkong yang sudah diuji dan aman digunakan. Admin selalu mengupdate ke versi paling baru dan menghapus yang lama.
+
+⬇️ Klik tombol *"Minta File APK"* untuk meminta admin mengirimkan file ke kamu.
+
+---
+💡 *Cara install setelah dapat file:*
+1. Buka file APK yang dikirim bot
+2. Pengaturan → Keamanan → Izinkan sumber tidak dikenal
+3. Install & buka TikTok HK seperti biasa`;
 }
 
 export function pesanInfo(): string {
-  const terbaru = daftarVersi[0];
   return `ℹ️ *INFO VERSI TERBARU*
 
-🆕 *${terbaru.versi}*
-📅 Dirilis: ${terbaru.tanggal}
-📦 Ukuran: ${terbaru.ukuran}
+📱 *TikTok HK — Selalu Versi Terbaru*
+🔄 Admin memperbarui file setiap ada versi baru dari TikTok HK
+🗑️ Versi lama dihapus otomatis setelah ada yang baru
 
-📝 *Yang baru di versi ini:*
-${terbaru.deskripsi}
+✅ *Jaminan keamanan:*
+• Setiap file diuji terlebih dahulu sebelum dibagikan
+• Khusus untuk pengguna TikTok Hongkong
+• Tidak ada modifikasi — file asli dari TikTok HK
 
-✅ Versi ini sudah diuji dan aman digunakan untuk TikTok HK.
+📩 *Cara dapatkan file:*
+Ketik /minta dan admin akan mengirimkan APK terbaru langsung ke chat ini.
 
 💡 *Cara install:*
-1. Download file APK
-2. Buka Pengaturan → Keamanan → Izinkan dari sumber tidak dikenal
+1. Download file APK yang dikirim
+2. Pengaturan → Keamanan → Izinkan dari sumber tidak dikenal
 3. Buka file APK dan install
 4. Selesai! Buka TikTok HK seperti biasa`;
 }
@@ -63,98 +71,95 @@ ${terbaru.deskripsi}
 export function pesanDonasi(): string {
   return `💛 *DONASI SUKARELA*
 
-Halo! Bot dan layanan update ini kami kelola secara pribadi.
-File APK yang kami sediakan cukup besar dan membutuhkan:
-• 💾 Biaya penyimpanan & bandwidth
-• ⏰ Waktu untuk mencari & menguji setiap versi
-• 🔄 Update rutin setiap ada versi baru
+Halo! Layanan update TikTok HK ini dikelola secara pribadi.
+File APK cukup besar & butuh waktu untuk cari, uji, dan upload setiap versi baru.
 
-*Donasi Anda sangat membantu kelangsungan layanan ini!*
+*Donasi kamu sangat membantu kelangsungan layanan ini!*
 
-🏦 *Info Transfer:*
-${infoBank.rekening}
-*A.n.* ${infoBank.namaPenerima}
+---
+💚 *GoPay:*
+*0856-4145-2357*
 
-💬 *${infoBank.pesanDonasi}*
+🔴 *Alipay HK:*
+Ketik /qralipay untuk melihat QR Code Alipay HK
 
 ---
 🎁 *Keuntungan Donatur:*
-• Download tanpa batas (tidak ada limit 3x)
-• Notifikasi prioritas saat versi baru rilis
+• Minta APK tanpa batas (tidak ada limit 3x)
+• Prioritas saat versi baru rilis
 
-Setelah donasi, klik tombol *"Saya Sudah Donasi"* di bawah.
-_(Kami percaya kejujuran Anda)_ 🙏`;
+Setelah donasi, klik *"Saya Sudah Donasi"* di bawah.
+_Kami percaya kejujuran kamu_ 🙏
+
+*${infoBank.pesanDonasi}*`;
 }
 
 export function pesanBantuan(): string {
   return `❓ *PANDUAN PENGGUNAAN BOT*
 
-*Perintah yang tersedia:*
-
-/start — Mulai & tampilkan menu utama
-/katalog — Lihat daftar semua versi APK
-/download — Langsung ke menu download
-/info — Info versi TikTok terbaru
-/donasi — Cara donasi & info rekening
-/bantuan — Tampilkan panduan ini
+*Daftar perintah:*
+/start — Tampilkan menu utama
+/katalog — Info APK TikTok HK terbaru
+/minta — Minta file APK ke admin
+/info — Detail versi & cara install
+/donasi — Info donasi & rekening
+/qralipay — Tampilkan QR Code Alipay HK
+/bantuan — Panduan ini
 
 ---
-*Sistem Download:*
-• 🎁 Gratis *3x download* untuk semua pengguna
-• 💛 Donasi sukarela untuk download tanpa batas
-• ✅ Donatur mendapat akses prioritas & tanpa batas
+*Sistem permintaan file:*
+🎁 Gratis *3x permintaan* untuk semua anggota
+💛 Donasi sukarela = permintaan tanpa batas
+✅ Donatur mendapat akses prioritas
 
-*Masalah atau pertanyaan?*
-Hubungi admin grup langsung.`;
+*Ada masalah?* Hubungi admin grup secara langsung.`;
 }
 
-export function pesanDownloadVersi(
-  userId: number,
-  indexVersi: number,
-): string {
-  const v = daftarVersi[indexVersi];
+export function pesanMintaFile(userId: number, nama: string): string {
   const sisa = sisaDownloadGratis(userId);
 
   if (sisa <= 0) {
-    return `⚠️ *Download gratis kamu sudah habis (3/3)*
+    return `⚠️ *Permintaan gratis kamu sudah habis (3/3), ${nama}*
 
-Untuk tetap mendapatkan file APK TikTok terbaru, silakan lakukan donasi sukarela.
+Untuk terus mendapatkan file APK TikTok terbaru, silakan lakukan donasi sukarela.
 
 Ketik /donasi untuk melihat cara donasi. 💛
 
-_Terima kasih sudah memahami! Donasi membantu kami terus update._`;
+_Terima kasih sudah memahami! Donasi membantu admin terus update untuk komunitas._`;
   }
 
   const sisaSetelah = sisa >= 999 ? "∞ (Donatur)" : `${sisa - 1}x`;
 
-  return `✅ *${v.versi}*
+  return `✅ *Permintaan diterima, ${nama}!*
 
-📦 Ukuran: ${v.ukuran}
-📅 ${v.tanggal}
-📝 ${v.deskripsi}
+📩 Admin akan segera mengirimkan file APK TikTok HK versi terbaru ke chat ini.
 
-⬇️ *Link Download:*
-${v.linkDownload}
+⏳ *Mohon tunggu sebentar* — admin akan memproses permintaan kamu.
 
 ---
-🔢 Sisa download gratis kamu: *${sisaSetelah}*
+📦 Yang akan kamu terima:
+• File APK TikTok HK versi terbaru
+• Ukuran: ± 80–90 MB
 
-💡 *Cara install:*
-1. Download file APK dari link di atas
-2. Pengaturan → Keamanan → Izinkan sumber tidak dikenal
-3. Install APK → Buka TikTok HK
+---
+🔢 Sisa permintaan gratis kamu: *${sisaSetelah}*
 
-🙏 Jika terbantu, pertimbangkan donasi sukarela ya! /donasi`;
+💡 Setelah file diterima:
+1. Klik file untuk download
+2. Izinkan install dari sumber tidak dikenal
+3. Install & nikmati TikTok HK terbaru!
+
+🙏 Jika terbantu, pertimbangkan donasi sukarela → /donasi`;
 }
 
 export function pesanKonfirmasiDonasi(nama: string): string {
-  return `✅ *Terima kasih, ${nama}!*
+  return `✅ *Terima kasih, ${nama}!* 🙏
 
-Kami mencatat konfirmasi donasi kamu. 🙏
-Kamu sekarang mendapat akses *download tanpa batas*!
+Kami mencatat konfirmasi donasi kamu.
+Kamu sekarang mendapat akses *permintaan tanpa batas*! 🎉
 
-💛 Dukungan kamu sangat berarti untuk kelangsungan layanan ini.
-Semoga berkah! 🌟
+💛 Dukungan kamu sangat berarti untuk kelangsungan layanan update TikTok HK ini.
+Semoga berkah selalu! 🌟
 
-Ketik /download untuk mulai download kapan saja.`;
+Ketik /minta kapan saja untuk mendapatkan file APK terbaru.`;
 }
