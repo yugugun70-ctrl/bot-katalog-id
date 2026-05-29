@@ -7,6 +7,7 @@ import {
   menuUtama,
   menuKatalog,
   menuPilihKatalogLink,
+  menuPilihKatalogFile,
   menuDonasi,
   menuKembali,
   menuSetelahMinta,
@@ -45,6 +46,9 @@ import {
   simpanPendingUrl,
   ambilPendingUrl,
   hapusPendingUrl,
+  simpanPendingFileId,
+  ambilPendingFileId,
+  hapusPendingFileId,
 } from "./adminStore";
 
 const token = process.env["TELEGRAM_BOT_TOKEN"];
@@ -271,6 +275,32 @@ function setupHandlers(b: Telegraf): void {
     return ctx.editMessageText("❌ Dibatalkan. Link tidak disimpan.");
   }));
 
+  for (const item of daftarKatalog) {
+    b.action(`assign_file_${item.id}`, safeHandler(async (ctx) => {
+      const userId = getUserId(ctx);
+      if (!isAdmin(userId)) return ctx.answerCbQuery("⛔ Akses ditolak.");
+      const fileId = ambilPendingFileId(userId);
+      if (!fileId) {
+        await ctx.answerCbQuery("❌ File sudah kadaluarsa, upload ulang.");
+        return;
+      }
+      simpanFileId(item.id, fileId);
+      hapusPendingFileId(userId);
+      await ctx.answerCbQuery(`✅ Disimpan ke ${item.nama}`);
+      return ctx.editMessageText(
+        `✅ *File APK berhasil disimpan!*\n\n📦 Jenis: *${item.nama}*\n\nAnggota sudah bisa download via bot! /status`,
+        { parse_mode: "Markdown" },
+      );
+    }));
+  }
+
+  b.action("batal_file", safeHandler(async (ctx) => {
+    const userId = getUserId(ctx);
+    hapusPendingFileId(userId);
+    await ctx.answerCbQuery("Dibatalkan");
+    return ctx.editMessageText("❌ Dibatalkan. File tidak disimpan.");
+  }));
+
   b.action("menu_utama", safeHandler(async (ctx) => {
     initUser(ctx);
     await ctx.answerCbQuery();
@@ -339,24 +369,29 @@ function setupHandlers(b: Telegraf): void {
     if (!isAdmin(userId)) {
       return ctx.reply("Halo! Ketik /bantuan untuk melihat semua perintah.", menuKembali);
     }
-    const caption = ctx.message.caption?.trim().toLowerCase() ?? "";
     const fileId = ctx.message.document.file_id;
     const namaFile = ctx.message.document.file_name ?? "file";
+    const caption = ctx.message.caption?.trim().toLowerCase() ?? "";
+
+    // Jika ada caption yang cocok, langsung simpan
     const katalogItem = daftarKatalog.find(
       (v) => v.id === caption || v.nama.toLowerCase() === caption,
     );
-    if (!katalogItem) {
-      const daftarId = daftarKatalog.map((v) => `• \`${v.id}\``).join("\n");
+    if (katalogItem) {
+      simpanFileId(katalogItem.id, fileId);
+      logger.info({ katalogId: katalogItem.id, namaFile }, "Admin upload APK file");
       return ctx.reply(
-        `⚠️ *Caption tidak dikenali:* \`${caption || "(kosong)"}\`\n\nTulis caption dengan salah satu ID ini:\n\n${daftarId}\n\nAtau kirim *link* (tanpa caption) — bot akan tanya sendiri jenisnya.`,
+        `✅ *${katalogItem.nama}* berhasil disimpan!\n\nAnggota sudah bisa download. Ketik /status untuk cek semua file.`,
         { parse_mode: "Markdown" },
       );
     }
-    simpanFileId(katalogItem.id, fileId);
-    logger.info({ katalogId: katalogItem.id, namaFile }, "Admin upload APK file");
+
+    // Tidak ada caption / caption tidak cocok → tampilkan tombol pilih jenis
+    simpanPendingFileId(userId, fileId);
+    logger.info({ namaFile }, "Admin upload file, menunggu pilih katalog");
     return ctx.reply(
-      `✅ *${katalogItem.nama}* berhasil disimpan!\n\nAnggota sudah bisa download otomatis. Ketik /status untuk cek semua file.`,
-      { parse_mode: "Markdown" },
+      `📦 *File diterima:* \`${namaFile}\`\n\nPilih jenis APK untuk file ini:`,
+      { parse_mode: "Markdown", ...menuPilihKatalogFile },
     );
   }));
 

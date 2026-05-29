@@ -28,6 +28,13 @@ export const menuPilihKatalogLink = Markup.inlineKeyboard([
   [Markup.button.callback("❌ Batal", "batal_link")],
 ]);
 
+export const menuPilihKatalogFile = Markup.inlineKeyboard([
+  ...daftarKatalog.map((v) => [
+    Markup.button.callback(v.nama, `assign_file_${v.id}`),
+  ]),
+  [Markup.button.callback("❌ Batal", "batal_file")],
+]);
+
 export const menuDonasi = Markup.inlineKeyboard([
   [Markup.button.callback("🔴 Lihat QR Alipay HK", "qralipay")],
   [Markup.button.callback("✅ Saya Sudah Donasi", "konfirmasi_donasi")],

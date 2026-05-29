@@ -86,3 +86,17 @@ export function ambilPendingUrl(adminId: number): string | null {
 export function hapusPendingUrl(adminId: number): void {
   pendingUrl.delete(adminId);
 }
+
+const pendingFileId = new Map<number, string>();
+
+export function simpanPendingFileId(adminId: number, fileId: string): void {
+  pendingFileId.set(adminId, fileId);
+}
+
+export function ambilPendingFileId(adminId: number): string | null {
+  return pendingFileId.get(adminId) ?? null;
+}
+
+export function hapusPendingFileId(adminId: number): void {
+  pendingFileId.delete(adminId);
+}
