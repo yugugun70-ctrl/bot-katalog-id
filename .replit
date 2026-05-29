@@ -31,3 +31,4 @@ externalPort = 80
 
 [userenv.shared]
 BOT_TOKEN = "8991903471:AAHHGY1w8ult1LaJ2LlZObfwneK9hqG1t14"
+BOT_DEV_MODE = "true"
