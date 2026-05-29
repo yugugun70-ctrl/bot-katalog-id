@@ -100,3 +100,17 @@ export function ambilPendingFileId(adminId: number): string | null {
 export function hapusPendingFileId(adminId: number): void {
   pendingFileId.delete(adminId);
 }
+
+const pendingBroadcast = new Set<number>();
+
+export function mulaiModeBroadcast(adminId: number): void {
+  pendingBroadcast.add(adminId);
+}
+
+export function cekModeBroadcast(adminId: number): boolean {
+  return pendingBroadcast.has(adminId);
+}
+
+export function hapusModeBroadcast(adminId: number): void {
+  pendingBroadcast.delete(adminId);
+}

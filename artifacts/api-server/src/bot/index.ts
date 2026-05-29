@@ -36,6 +36,7 @@ import {
   getDaftarPenggunaHabis,
   getTotalPengguna,
   getTotalDonatur,
+  getDaftarSemuaUserId,
 } from "./userTracker";
 import {
   isAdmin,
@@ -49,6 +50,9 @@ import {
   simpanPendingFileId,
   ambilPendingFileId,
   hapusPendingFileId,
+  mulaiModeBroadcast,
+  cekModeBroadcast,
+  hapusModeBroadcast,
 } from "./adminStore";
 
 const token = process.env["TELEGRAM_BOT_TOKEN"];
@@ -197,6 +201,24 @@ function setupHandlers(b: Telegraf): void {
     return ctx.reply(pesanStatistik(total, donatur, habis), {
       parse_mode: "Markdown",
     });
+  }));
+
+  b.command("broadcast", safeHandler(async (ctx) => {
+    initUser(ctx);
+    const userId = getUserId(ctx);
+    if (!isAdmin(userId)) return ctx.reply("⛔ Akses ditolak.");
+    mulaiModeBroadcast(userId);
+    return ctx.reply(
+      `📢 *Mode Broadcast Aktif*\n\nKirim pesan yang ingin dikirim ke semua pengguna.\nBisa berisi teks, emoji, format bold/italic.\n\nKirim /batal untuk membatalkan.`,
+      { parse_mode: "Markdown" },
+    );
+  }));
+
+  b.command("batal", safeHandler(async (ctx) => {
+    const userId = getUserId(ctx);
+    if (!isAdmin(userId)) return;
+    hapusModeBroadcast(userId);
+    return ctx.reply("❌ Broadcast dibatalkan.");
   }));
 
   b.command("hapus", safeHandler(async (ctx) => {
@@ -400,6 +422,28 @@ function setupHandlers(b: Telegraf): void {
     const userId = getUserId(ctx);
     const teks = ctx.message.text.trim();
 
+    // Mode broadcast aktif → kirim ke semua pengguna
+    if (isAdmin(userId) && cekModeBroadcast(userId)) {
+      hapusModeBroadcast(userId);
+      const semuaId = getDaftarSemuaUserId();
+      const pesanBroadcast = `📢 *Pengumuman dari Admin*\n\n${teks}`;
+      let berhasil = 0;
+      let gagal = 0;
+      for (const uid of semuaId) {
+        try {
+          await bot.telegram.sendMessage(uid, pesanBroadcast, { parse_mode: "Markdown" });
+          berhasil++;
+        } catch {
+          gagal++;
+        }
+      }
+      logger.info({ berhasil, gagal, total: semuaId.length }, "Broadcast selesai");
+      return ctx.reply(
+        `✅ *Broadcast selesai!*\n\n📨 Terkirim: *${berhasil}* pengguna\n❌ Gagal: *${gagal}* pengguna\n👥 Total: *${semuaId.length}* pengguna`,
+        { parse_mode: "Markdown" },
+      );
+    }
+
     if (isAdmin(userId) && isUrl(teks)) {
       simpanPendingUrl(userId, teks);
       return ctx.reply(pesanPilihKatalogLink(teks), {
@@ -410,7 +454,7 @@ function setupHandlers(b: Telegraf): void {
 
     if (isAdmin(userId)) {
       return ctx.reply(
-        "Halo Admin! Kirim file APK (dengan caption ID) atau kirim *link* langsung.\nKetik /admin untuk panduan.",
+        "Halo Admin! Kirim file APK atau link, atau ketik /admin untuk panduan lengkap.",
         { parse_mode: "Markdown" },
       );
     }

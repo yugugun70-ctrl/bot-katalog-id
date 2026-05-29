@@ -93,3 +93,7 @@ export function getTotalPengguna(): number {
 export function getTotalDonatur(): number {
   return Object.values(loadStore()).filter((u) => u.sudahDonasi).length;
 }
+
+export function getDaftarSemuaUserId(): number[] {
+  return Object.keys(loadStore()).map(Number);
+}
