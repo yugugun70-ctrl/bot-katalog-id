@@ -392,22 +392,52 @@ function setupHandlers(b: Telegraf): void {
   });
 }
 
+let reconnectAttempt = 0;
+
 function launchBot(): void {
-  bot = new Telegraf(token!);
+  console.log(`[BOT] 🔄 Menghubungkan ke Telegram... (percobaan ke-${reconnectAttempt + 1})`);
+
+  try {
+    bot = new Telegraf(token!);
+  } catch (err) {
+    console.error("[BOT] ❌ Gagal inisialisasi Telegraf:", (err as Error).message);
+    scheduleReconnect();
+    return;
+  }
+
   setupHandlers(bot);
 
-  bot.launch({ dropPendingUpdates: true }).catch((err) => {
-    logger.error({ err }, "Bot launch gagal, mencoba ulang dalam 10 detik...");
-    setTimeout(launchBot, 10_000);
-  });
+  bot.launch({ dropPendingUpdates: true })
+    .then(() => {
+      reconnectAttempt = 0;
+      console.log("[BOT] ✅ Bot Telegram TikTok HK berhasil terhubung dan aktif 🚀");
+      logger.info("Bot Telegram TikTok HK berhasil dijalankan 🚀");
+    })
+    .catch((err: Error) => {
+      console.error("[BOT] ❌ Koneksi gagal:", err.message);
+      logger.error({ err }, "Bot launch gagal");
+      scheduleReconnect();
+    });
+}
 
-  logger.info("Bot Telegram TikTok HK berhasil dijalankan 🚀");
+function scheduleReconnect(): void {
+  reconnectAttempt += 1;
+  const delay = Math.min(10_000 * reconnectAttempt, 60_000);
+  console.log(`[BOT] ⏳ Mencoba reconnect dalam ${delay / 1000} detik... (percobaan ${reconnectAttempt})`);
+  logger.warn({ reconnectAttempt, delay }, "Bot akan reconnect");
+  setTimeout(launchBot, delay);
 }
 
 export function startBot(): void {
   launchBot();
-  process.once("SIGINT", () => bot?.stop("SIGINT"));
-  process.once("SIGTERM", () => bot?.stop("SIGTERM"));
+  process.once("SIGINT", () => {
+    console.log("[BOT] 🛑 Bot dihentikan (SIGINT)");
+    bot?.stop("SIGINT");
+  });
+  process.once("SIGTERM", () => {
+    console.log("[BOT] 🛑 Bot dihentikan (SIGTERM)");
+    bot?.stop("SIGTERM");
+  });
 }
 
 export default bot!;
