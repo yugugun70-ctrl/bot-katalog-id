@@ -32,7 +32,7 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  const isProduction = process.env["REPLIT_DEPLOYMENT"] === "1";
+  const isProduction = process.env["NODE_ENV"] === "production";
   const devBotEnabled = process.env["BOT_DEV_MODE"] === "true";
 
   if (isProduction || devBotEnabled) {
