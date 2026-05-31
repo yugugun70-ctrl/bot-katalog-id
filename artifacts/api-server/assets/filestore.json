@@ -1,6 +1,34 @@
 {
+  "private_plus_arm8": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAICBGoZFpB_PfaqICjwUqLFYsBk8Vm1AAIeJAACe8nIVGOkTPD0f3sLOwQ"
+  },
+  "central": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAICEGoZGcQhxi0wI_Uriam4cKxYUHLwAAI1JAACe8nIVDxcEh014lnFOwQ"
+  },
+  "platinum_arm7": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAIDoGob-UPEpNVSvFhsA1NcZE7YqP3_AAJxJwACXYzhVPmkmyfgAAFSfTsE"
+  },
+  "private_plus_arm7": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAIDomob-WyEaxC25DZWN2aZBB74Il86AAJyJwACXYzhVG18n3iSZoKjOwQ"
+  },
+  "universal": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAIDy2ocAiNM_oOCp6Sv-VteQ3DsFzjVAAKBJwACXYzhVDaRoHuBA3pROwQ"
+  },
+  "plugin_universal": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAIDzWocAjlrYj_ElEaw6SyFnStmrJMJAAKCJwACXYzhVGlS4Fr94oW6OwQ"
+  },
   "platinum_arm8": {
     "tipe": "file",
-    "nilai": "BQACAgUAAxkBAAIB9WoZC_vq5vLVEwJc_1XWJl5UBsEYAAL-IwACe8nIVMXOim0btsecOwQ"
+    "nilai": "BQACAgUAAxkBAAID1WocA5l4fGl9KGjDEAYIiziThnFGAAKGJwACXYzhVGGD7NfeD7R4OwQ"
+  },
+  "plugin_private_plus": {
+    "tipe": "file",
+    "nilai": "BQACAgUAAxkBAAID12ocA6p-DlnB-hLs_Ty6z9Kh1BfeAAKHJwACXYzhVByu_LELPnA_OwQ"
   }
 }

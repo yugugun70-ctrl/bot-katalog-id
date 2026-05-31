@@ -13,10 +13,15 @@ export const menuUtama = Markup.inlineKeyboard([
 export const menuKatalog = Markup.inlineKeyboard([
   [Markup.button.callback("💛 Donasi", "donasi")],
   [Markup.button.callback("⭐ Platinum arm8", "minta_platinum_arm8")],
-  [Markup.button.callback("⭐ Platinum arm7", "minta_platinum_arm7")],
+  [Markup.button.callback("⭐ Universal", "minta_universal")],
   [Markup.button.callback("🔒 Private Plus arm8", "minta_private_plus_arm8")],
-  [Markup.button.callback("🔒 Private Plus arm7", "minta_private_plus_arm7")],
-  [Markup.button.callback("🔌 Plugin", "minta_plugin")],
+  [Markup.button.callback("🔒 plugin universal", "minta_plugin_universal")],
+  [
+    Markup.button.callback(
+      "🔌 Plugin private plus",
+      "minta_plugin_private_plus",
+    ),
+  ],
   [Markup.button.callback("🏛️ Central", "minta_central")],
   [Markup.button.callback("🏠 Menu Utama", "menu_utama")],
 ]);
