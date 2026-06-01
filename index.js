@@ -5,22 +5,28 @@ const app = express();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+// command
 bot.start((ctx) => {
-  ctx.reply("Halo, bot aktif 24 jam!");
+  ctx.reply("Halo, bot aktif di Deta Space 🚀");
 });
 
 bot.on("text", (ctx) => {
   ctx.reply(`Kamu bilang: ${ctx.message.text}`);
 });
 
-bot.launch();
-
-console.log("Bot Telegram aktif");
+// webhook route
+app.use(bot.webhookCallback("/webhook"));
 
 app.get("/", (req, res) => {
   res.send("Bot hidup");
 });
 
-app.listen(3000, () => {
-  console.log("Web server aktif");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, async () => {
+  const url = process.env.WEBHOOK_URL;
+
+  await bot.telegram.setWebhook(`${url}/webhook`);
+
+  console.log("Bot webhook aktif:", url);
 });
