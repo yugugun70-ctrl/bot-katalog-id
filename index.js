@@ -7,7 +7,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // command
 bot.start((ctx) => {
-  ctx.reply("Halo, bot aktif di Deta Space 🚀");
+  ctx.reply("TES NX CREATE");
 });
 
 bot.on("text", (ctx) => {
