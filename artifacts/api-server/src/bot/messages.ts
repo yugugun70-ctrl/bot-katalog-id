@@ -27,8 +27,7 @@ export function pesanKatalog(userId: number): string {
         ? `🎁 *Sisa download gratis: ${sisa}x*`
         : `⚠️ *Download gratis habis* — Silakan donasi untuk melanjutkan`;
 
-  const statusFile = (id: string) =>
-    cekTersedia(id) ? "✅" : "⏳";
+  const statusFile = (id: string) => (cekTersedia(id) ? "✅" : "⏳");
 
   return `📋 *KATALOG APK TIKTOK HK*
 
@@ -36,20 +35,18 @@ ${infoSisa}
 
 Pilih jenis APK yang ingin kamu download:
 
-${statusFile("platinum_arm8")} ⭐ *Platinum arm8* — HP modern (ARM64)
-${statusFile("platinum_arm7")} ⭐ *Platinum arm7* — HP lama (ARM32)
-${statusFile("private_plus_arm8")} 🔒 *Private Plus arm8* — HP modern (ARM64)
-${statusFile("private_plus_arm7")} 🔒 *Private Plus arm7* — HP lama (ARM32)
-${statusFile("plugin")} 🔌 *Plugin* — File plugin tambahan
+${statusFile("platinum_arm8")} ⭐ *Platinum arm8* —  Tidak perlu tambahkan plugin
+${statusFile("universal")} ⭐ *Universal* - Tambahkan plugin universal yang ada di katalog
+${statusFile("private_plus_arm8")} 🔒 *Private Plus arm8* — Tambahkan plugin private plus di katalog
+${statusFile("plugin_universal")} 🔒 *Plugin universal* — Cocok digunakan untuk universal
+${statusFile("plugin_private_plus")} 🔌 *Plugin* — Cocok digunakan private plus dan central
 ${statusFile("central")} 🏛️ *Central* — Versi Central
 
 ✅ = File tersedia  ⏳ = Segera hadir
 
 ---
-💡 *Tidak tahu ARM berapa HP kamu?*
-Pengaturan → Tentang Ponsel → Prosesor
-• ARM64 / aarch64 = pilih *arm8*
-• ARM32 / armeabi = pilih *arm7*`;
+💡 *Tidak tahu mau download yang mana?*
+Rekomendasi menggunakan platinum karena file tidak terlalu besar dan sudah termasuk plugin`;
 }
 
 export function pesanInfo(): string {
@@ -57,7 +54,8 @@ export function pesanInfo(): string {
 
 📱 Admin selalu menyediakan versi APK terbaru:
 
-⭐ *Platinum* — Versi premium dengan fitur lengkap
+⭐ *Platinum* — Stabil
+🌍 *Universal* - Versi lengkap
 🔒 *Private Plus* — Versi privat dengan fitur eksklusif
 🔌 *Plugin* — File plugin pendukung
 🏛️ *Central* — Versi central standar
@@ -163,7 +161,11 @@ export function pesanPilihKatalogLink(url: string): string {
 export function pesanStatistik(
   totalPengguna: number,
   totalDonatur: number,
-  penggunaHabis: Array<{ namaUser: string; jumlahDownload: number; terakhirDownload?: string }>,
+  penggunaHabis: Array<{
+    namaUser: string;
+    jumlahDownload: number;
+    terakhirDownload?: string;
+  }>,
 ): string {
   const habisText =
     penggunaHabis.length === 0
@@ -199,15 +201,17 @@ export function pesanDownloadBerhasil(
   return `✅ *File dikirim, ${nama}!*
 
 📦 *${namaApk}* sedang dikirim ke chat ini.
+💛 Terima kasih telah mendukung bot ini.
 
-🔢 Sisa download gratis: *${sisaText}*
+Bot ini berjalan berkat dukungan para donatur.
+
+Jika suatu saat ingin membantu pengembangan dan biaya operasional, donasi tambahan selalu sangat dihargai 🙏
+🔢 Sisa download gratis: 
 
 💡 *Cara install:*
 1. Klik file untuk download
 2. Izinkan install dari sumber tidak dikenal
-3. Install & nikmati TikTok HK terbaru!
-
-🙏 Jika terbantu, pertimbangkan donasi → /donasi`;
+3. Install & nikmati TikTok HK terbaru!`;
 }
 
 export function pesanFileBelumAda(namaApk: string): string {
