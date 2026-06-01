@@ -84,7 +84,6 @@ overrides:
   "esbuild>@esbuild/linux-arm64": "-"
   "esbuild>@esbuild/linux-ia32": "-"
   "esbuild>@esbuild/linux-loong64": "-"
-  "esbuild>@esbuild/linux-mips64el": "-"
   "esbuild>@esbuild/linux-ppc64": "-"
   "esbuild>@esbuild/linux-riscv64": "-"
   "esbuild>@esbuild/linux-s390x": "-"
